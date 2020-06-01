@@ -67,7 +67,7 @@ def run():
 	criterion = nn.CrossEntropyLoss()
 	optimizer = torch.optim.Adam(model.parameters())
 
-	for epoch in range(2):  # loop over the dataset multiple times
+	for epoch in range(20):  # loop over the dataset multiple times
 
 		running_loss = 0.0
 		for i, data in enumerate(loader, 0):
