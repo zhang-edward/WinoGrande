@@ -22,8 +22,10 @@ def main(args):
     pred_answers_list = [l.strip().split(',') for l in open(preds_file, 'r')]
     pred_answers_list = list(zip(*pred_answers_list))
 
-    training_split = ['XS', 'S', 'M', 'L', 'XL']
-    training_sizes = [160, 640, 2558, 10234, 40398]
+    # training_split = ['XS', 'S', 'M', 'L', 'XL']
+    # training_sizes = [160, 640, 2558, 10234, 40398]
+    training_split = ['XS']
+    training_sizes = [160]
     x = [math.log2(t) for t in training_sizes]
     x_diff = max(x)-min(x)
 
