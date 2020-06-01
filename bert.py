@@ -64,7 +64,7 @@ def run():
 	loader = DataLoader(dataset, batch_size, shuffle=True)
 	model = model.to(device)
 
-	criterion = nn.BCELoss()
+	criterion = nn.BCEWithLogitsLoss()
 	optimizer = torch.optim.Adam(model.parameters())
 
 	for epoch in range(20):  # loop over the dataset multiple times
