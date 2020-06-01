@@ -87,9 +87,9 @@ def run():
 
 			if i % 1 == 0:    # print every 50 mini-batches
 				running_loss += loss.item()
-				print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss/50))
+				print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss))
 				running_loss = 0.0
-			
-	torch.save(model, "bert_model")
+
+	torch.save(model, "bert_model.mdl")
 
 run()
