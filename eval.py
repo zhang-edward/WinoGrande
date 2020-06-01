@@ -40,7 +40,7 @@ def main(args):
         results['accuracy_' + train_name] = accuracy
         y.append(accuracy)
 
-    results["AUC"] = auc(x, y)/x_diff       # normalized area under (learing) curve
+    # results["AUC"] = auc(x, y)/x_diff       # normalized area under (learing) curve
 
     with open(metrics_output_file, "w") as f:
         f.write(json.dumps(results))
