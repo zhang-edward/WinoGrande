@@ -9,6 +9,7 @@ use_cuda = torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")
 
 model = torch.load(MODEL_NAME, map_location=device)
+model.to(device)
 
 model.eval()
 
@@ -27,6 +28,7 @@ for index, row in df.iterrows():
 
     input = row['sentence'].replace('_', row['option2'] + " [SEP] ")
     tok_input = torch.tensor(tokenizer.encode(input, pad_to_max_length="True")).unsqueeze(0)
+    tok_input.to(device)
     output = model(tok_input)
     output_logits_2 = output[0].detach().numpy()
 
