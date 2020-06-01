@@ -64,7 +64,7 @@ def run():
 	loader = DataLoader(dataset, batch_size, shuffle=True)
 	model = model.to(device)
 
-	criterion = nn.CrossEntropyLoss()
+	criterion = nn.BCELoss()
 	optimizer = torch.optim.Adam(model.parameters())
 
 	for epoch in range(20):  # loop over the dataset multiple times
@@ -90,6 +90,6 @@ def run():
 				print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss))
 				running_loss = 0.0
 
-	torch.save(model, "bert_model.mdl")
+		torch.save(model, "bert_model.mdl")
 
 run()
