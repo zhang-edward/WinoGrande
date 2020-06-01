@@ -87,9 +87,10 @@ def run():
                 optimizer.step()
                 # print statistics
 
-                if i % 1 == 0:    # print every 50 mini-batches
-                    running_loss += loss.item()
-                    print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss))
+				running_loss += loss.item()
+
+                if i % 20 == 19:    # print every 50 mini-batches
+                    print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss/20))
                     running_loss = 0.0
 
             torch.save(model, "bert_model_{}.mdl".format(trainsize))
