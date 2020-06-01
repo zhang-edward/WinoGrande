@@ -31,11 +31,11 @@ def run():
 		X_data.append(row['sentence'].replace('_', row['option1'] + " [SEP] "))
 		X_data.append(row['sentence'].replace('_', row['option2'] + " [SEP] "))
 		if row['answer'] == 1:
-		y_data.append(1)
-		y_data.append(0)
+			y_data.append(1)
+			y_data.append(0)
 		else:
-		y_data.append(0)
-		y_data.append(1)
+			y_data.append(0)
+			y_data.append(1)
 
 	print('Number of training examples: {:,}\n'.format(df.shape[0]))
 
@@ -69,22 +69,23 @@ def run():
 		running_loss = 0.0
 		for i, data in enumerate(loader, 0):
 		# get the inputs; data is a list of [inputs, labels]
-		inputs, labels = data
+			inputs, labels = data
 
-		# zero the parameter gradients
-		optimizer.zero_grad()
-		# forward + backward + optimize
-		outputs = model(inputs)
+			# zero the parameter gradients
+			optimizer.zero_grad()
+			# forward + backward + optimize
+			outputs = model(inputs)
 
-		loss = criterion(outputs[0], labels)
-		loss.backward()
-		optimizer.step()
-		# print statistics
+			loss = criterion(outputs[0], labels)
+			loss.backward()
+			optimizer.step()
+			# print statistics
 
-		if i % 50 == 49:    # print every 50 mini-batches
-			running_loss += loss.item()
-			print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss/50))
-			running_loss = 0.0
+			if i % 50 == 49:    # print every 50 mini-batches
+				running_loss += loss.item()
+				print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss/50))
+				running_loss = 0.0
 			
 	torch.save(model, "bert_model")
 
+run()
