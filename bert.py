@@ -39,16 +39,17 @@ X_data = [
 	"hello [SEP] world"
 ]
 
+print(model(torch.tensor(tokenizer.encode(["hello [SEP] world"])).unsqueeze(0)))
+
 X_train = torch.tensor([tokenizer.encode(d) for d in X_data])
-y_train = torch.tensor([
-	[1, 0],
-	[1, 0]
-])
+y_train = torch.tensor(np.array([
+	0,
+	0
+]))
 
 batch_size = 32
 dataset = Dataset(X_train, y_train)
 loader = DataLoader(dataset, batch_size, shuffle=True)
-
 # if torch.cuda.is_available():
 #     model = model.to("cuda")
     
@@ -65,8 +66,8 @@ for epoch in range(2):  # loop over the dataset multiple times
 		# zero the parameter gradients
 		optimizer.zero_grad()
 		# forward + backward + optimize
-		outputs = model(inputs)
-		loss = criterion(outputs, labels)
+		outputs  = model(inputs)
+		loss = criterion(outputs[0], labels)
 		loss.backward()
 		optimizer.step()
 
@@ -77,3 +78,5 @@ for epoch in range(2):  # loop over the dataset multiple times
 			running_loss = 0.0
 
 print('Finished Training')
+
+print(model(torch.tensor(tokenizer.encode(["hello [SEP] world"])).unsqueeze(0)))
