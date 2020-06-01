@@ -11,10 +11,6 @@ from defs import Dataset
 
 df = pd.read_json('./data/train_xs.jsonl', lines=True)
 
-# print('Number of training examples: {:,}\n'.format(df.shape[0]))
-# print(df.drop(['qID'], axis=1).sample(10))
-
-# print(df['sentence'].head())
 '''
 [CLS] Ian volunteered to eat Dennis's menudo after already having a bowl because Ian [SEP] despised eating intestine. [SEP]",
 -> [0.1, 0.9]
@@ -27,32 +23,43 @@ df = pd.read_json('./data/train_xs.jsonl', lines=True)
 "answer": "2"
 '''
 
+X_data = []
+y_data = []
+
+for index, row in df.iterrows():
+	X_data.append(row['sentence'].replace('_', row['option1'] + " [SEP] "))
+	X_data.append(row['sentence'].replace('_', row['option2'] + " [SEP] "))
+	if row['answer'] == 1:
+		y_data.append(1)
+		y_data.append(0)
+	else:
+		y_data.append(0)
+		y_data.append(1)
+
+print('Number of training examples: {:,}\n'.format(df.shape[0]))
+
 tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-cased')
 # model = DistilBertModel.from_pretrained('distilbert-base-cased')
 model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-cased')
 
-# inp = tokenizer.encode("I hate cats. [SEP] Cats scare me.")
-# inp = tokenizer.encode("I hate cats. [SEP] I love cats.")
-# print(model(torch.tensor(inp).unsqueeze(0))[0].shape)
-X_data = [
-	"hello [SEP] world",
-	"hello [SEP] world"
-]
+X_train = torch.tensor([tokenizer.encode(d, pad_to_max_length="True") for d in X_data])
+y_train = torch.tensor(y_data)
 
-print(model(torch.tensor(tokenizer.encode(["hello [SEP] world"])).unsqueeze(0)))
+print(X_train.shape)
+print(y_train.shape)
 
-X_train = torch.tensor([tokenizer.encode(d) for d in X_data])
-y_train = torch.tensor(np.array([
-	0,
-	0
-]))
+# n = tokenizer.encode(X_data[0])
+# n = torch.tensor(n).unsqueeze(0)
+# # print(n)
+# # p = model(n)
+# # print(p[0].data[0][0] > p[0].data[0][1])
 
 batch_size = 32
 dataset = Dataset(X_train, y_train)
 loader = DataLoader(dataset, batch_size, shuffle=True)
 # if torch.cuda.is_available():
 #     model = model.to("cuda")
-    
+
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters())
 
@@ -66,7 +73,8 @@ for epoch in range(2):  # loop over the dataset multiple times
 		# zero the parameter gradients
 		optimizer.zero_grad()
 		# forward + backward + optimize
-		outputs  = model(inputs)
+		outputs = model(inputs)
+		
 		loss = criterion(outputs[0], labels)
 		loss.backward()
 		optimizer.step()
