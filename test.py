@@ -23,13 +23,13 @@ for index, row in df.iterrows():
     tok_input = torch.tensor(tokenizer.encode(input, pad_to_max_length="True")).unsqueeze(0)
     tok_input = tok_input.to(device)
     output = model(tok_input)
-    output_logits_1 = output[0].detach().numpy()
+    output_logits_1 = output[0].cpu().detach().numpy()
 
     input = row['sentence'].replace('_', row['option2'] + " [SEP] ")
     tok_input = torch.tensor(tokenizer.encode(input, pad_to_max_length="True")).unsqueeze(0)
     tok_input = tok_input.to(device)
     output = model(tok_input)
-    output_logits_2 = output[0].detach().numpy()
+    output_logits_2 = output[0].cpu().detach().numpy()
 
     pred1 = np.argmax(output_logits_1)
     pred2 = np.argmax(output_logits_2)
