@@ -24,6 +24,9 @@ from defs import Dataset
 def run():
 	df = pd.read_json('./data/train_xs.jsonl', lines=True)
 
+	use_cuda = torch.cuda.is_available()
+	device = torch.device("cuda" if use_cuda else "cpu")
+
 	X_data = []
 	y_data = []
 
@@ -58,8 +61,7 @@ def run():
 	batch_size = 32
 	dataset = Dataset(X_train, y_train)
 	loader = DataLoader(dataset, batch_size, shuffle=True)
-	# if torch.cuda.is_available():
-	#     model = model.to("cuda")
+	model = model.to(device)
 
 	criterion = nn.CrossEntropyLoss()
 	optimizer = torch.optim.Adam(model.parameters())
@@ -70,6 +72,7 @@ def run():
 		for i, data in enumerate(loader, 0):
 		# get the inputs; data is a list of [inputs, labels]
 			inputs, labels = data
+			inputs, labels = inputs.to(device), labels.to(device)
 
 			# zero the parameter gradients
 			optimizer.zero_grad()
