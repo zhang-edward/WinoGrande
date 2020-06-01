@@ -19,7 +19,7 @@ tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-cased')
 
 for index, row in df.iterrows():
     pred = []
-    for trainsize in ['xs', 's', 'm', 'l', 'xl']:
+    for trainsize in ['l']:
         model_name = MODEL_NAME_FORMAT.format(trainsize)
         model = torch.load(model_name, map_location=device)
         model.eval()
