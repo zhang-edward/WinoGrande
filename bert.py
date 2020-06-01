@@ -35,11 +35,11 @@ def run():
 		X_data.append(row['sentence'].replace('_', row['option1'] + " [SEP] "))
 		X_data.append(row['sentence'].replace('_', row['option2'] + " [SEP] "))
 		if row['answer'] == 1:
-			y_data.append(1)
-			y_data.append(0)
+			y_data.append([0, 1])
+			y_data.append([1, 0])
 		else:
-			y_data.append(0)
-			y_data.append(1)
+			y_data.append([1, 0])
+			y_data.append([0, 1])
 
 	print('Number of training examples: {:,}\n'.format(df.shape[0]))
 
