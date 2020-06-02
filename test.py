@@ -60,5 +60,5 @@ for trainsize in ['xs', 's', 'm']:
 y_pred = list(map(list, zip(*y_pred)))
 
 with open("test_results.txt", "w") as f:
-    for row in f:
+    for row in y_pred:
         f.write(",".join([str(n) for n in row]))
