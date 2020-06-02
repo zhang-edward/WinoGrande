@@ -17,7 +17,7 @@ y_pred = []
 
 tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-cased')
 
-for trainsize in ['xs', 's', 'm', 'l', 'xl']:
+for trainsize in ['xs', 's', 'm']:
     pred = []
     for index, row in df.iterrows():
         model_name = MODEL_NAME_FORMAT.format(trainsize)
