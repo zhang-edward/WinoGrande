@@ -44,10 +44,10 @@ for trainsize in ['xs', 's', 'm', 'l', 'xl']:
             diff1 = abs(output_logits_1[0][0] - output_logits_1[0][1])
             diff2 = abs(output_logits_2[0][0] - output_logits_2[0][1])
 
-            if diff1 > diff2:
-                pred.append(1)
-            else:
-                pred.append(2)
+            if pred1 == 0: # option 1 is more wrong, so predict 2
+                pred.append(2) if diff1 > diff2 else pred.append(1)
+            else: # option 1 is more right, so predict 1
+                pred.append(1) if diff1 > diff2 else pred.append(2)
         else:
             if pred1 == 1:
                 pred.append(1)
