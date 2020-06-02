@@ -17,9 +17,9 @@ y_pred = []
 
 tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-cased')
 
-for index, row in df.iterrows():
+for trainsize in ['xs', 's', 'm', 'l', 'xl']:
     pred = []
-    for trainsize in ['l']:
+    for index, row in df.iterrows():
         model_name = MODEL_NAME_FORMAT.format(trainsize)
         model = torch.load(model_name, map_location=device)
         model.eval()
@@ -55,4 +55,10 @@ for index, row in df.iterrows():
                 pred.append(2)
 
     y_pred.append(pred)
-    print(",".join(y_pred))
+
+# Transpose matrix
+y_pred = list(map(list, zip(*y_pred)))
+
+with open("test_results.txt", "w") as f:
+    for row in f:
+        f.write(",".join([str(n) for n in row]))
