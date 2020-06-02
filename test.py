@@ -55,4 +55,4 @@ for index, row in df.iterrows():
                 pred.append(2)
 
     y_pred.append(pred)
-    print(",".join(pred))
+    print(",".join(y_pred))
