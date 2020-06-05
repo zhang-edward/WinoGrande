@@ -1,4 +1,5 @@
-from transformers import DistilBertTokenizer, DistilBertModel, DistilBertForSequenceClassification
+from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, RobertaTokenizer, RobertaForSequenceClassification
+import sys
 import pandas as pd
 import numpy as np
 import torch
@@ -21,78 +22,89 @@ from defs import Dataset
 "answer": "2"
 '''
 
-def run():
-	for trainsize in ['xs', 's', 'm', 'l', 'xl']:
-		print("TRAIN SIZE: " + trainsize)
-		df = pd.read_json('./data/train_{}.jsonl'.format(trainsize), lines=True)
+def get_model(model_name):
+    if model_name.lower() == "distilbert":
+        return (
+            DistilBertTokenizer.from_pretrained('distilbert-base-cased'),
+            DistilBertForSequenceClassification.from_pretrained('distilbert-base-cased'))
+    elif model_name.lower() == "roberta":
+        return (
+            RobertaTokenizer.from_pretrained('roberta-base'),
+            RobertaForSequenceClassification.from_pretrained('roberta-base'))
+    else:
+        print("Not a valid model!")
+        return None
 
-		use_cuda = torch.cuda.is_available()
-		device = torch.device("cuda" if use_cuda else "cpu")
-		print("Device: ", device)
+def run(model_name):
+    for trainsize in ['xs']:#, 's', 'm', 'l', 'xl']:
+        print("TRAIN SIZE: " + trainsize)
+        df = pd.read_json('./data/train_{}.jsonl'.format(trainsize), lines=True)
 
-		X_data = []
-		y_data = []
+        use_cuda = torch.cuda.is_available()
+        device = torch.device("cuda" if use_cuda else "cpu")
+        print("Device: ", device)
 
-		for index, row in df.iterrows():
-			X_data.append(row['sentence'].replace('_', row['option1'] + " [SEP] "))
-			X_data.append(row['sentence'].replace('_', row['option2'] + " [SEP] "))
-			if row['answer'] == 1:
-				y_data.append([0.0, 1.0])
-				y_data.append([1.0, 0.0])
-			else:
-				y_data.append([1.0, 0.0])
-				y_data.append([0.0, 1.0])
+        X_data = []
+        y_data = []
 
-		print('Number of training examples: {:,}\n'.format(df.shape[0]))
+        for index, row in df.iterrows():
+            X_data.append(row['sentence'].replace('_', row['option1'] + " [SEP] "))
+            X_data.append(row['sentence'].replace('_', row['option2'] + " [SEP] "))
+            if row['answer'] == 1:
+                y_data.append([0.0, 1.0])
+                y_data.append([1.0, 0.0])
+            else:
+                y_data.append([1.0, 0.0])
+                y_data.append([0.0, 1.0])
 
-		tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-cased')
-		# model = DistilBertModel.from_pretrained('distilbert-base-cased')
-		model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-cased')
+        tokenizer, model = get_model(model_name)
 
-		X_train = torch.tensor([tokenizer.encode(d, pad_to_max_length="True") for d in X_data])
-		y_train = torch.tensor(y_data)
+        print('Number of training examples: {:,}\n'.format(df.shape[0]))
 
-		print(X_train.shape)
-		print(y_train.shape)
+        X_train = torch.tensor([tokenizer.encode(d, pad_to_max_length="True") for d in X_data])
+        y_train = torch.tensor(y_data)
 
-		# n = tokenizer.encode(X_data[0])
-		# n = torch.tensor(n).unsqueeze(0)
-		# # print(n)
-		# # p = model(n)
-		# # print(p[0].data[0][0] > p[0].data[0][1])
+        print("X shape:", X_train.shape)
+        print("y shape:", y_train.shape)
 
-		batch_size = 32
-		dataset = Dataset(X_train, y_train)
-		loader = DataLoader(dataset, batch_size, shuffle=True)
-		model = model.to(device)
+        # n = tokenizer.encode(X_data[0])
+        # n = torch.tensor(n).unsqueeze(0)
+        # # print(n)
+        # # p = model(n)
+        # # print(p[0].data[0][0] > p[0].data[0][1])
 
-		criterion = nn.BCEWithLogitsLoss()
-		optimizer = torch.optim.Adam(model.parameters())
+        batch_size = 32
+        dataset = Dataset(X_train, y_train)
+        loader = DataLoader(dataset, batch_size, shuffle=True)
+        model = model.to(device)
 
-		for epoch in range(5):  # loop over the dataset multiple times
+        criterion = nn.BCEWithLogitsLoss()
+        optimizer = torch.optim.Adam(model.parameters())
 
-			running_loss = 0.0
-			for i, data in enumerate(loader, 0):
-			# get the inputs; data is a list of [inputs, labels]
-				inputs, labels = data
-				inputs, labels = inputs.to(device), labels.to(device)
+        for epoch in range(5):  # loop over the dataset multiple times
 
-				# zero the parameter gradients
-				optimizer.zero_grad()
-				# forward + backward + optimize
-				outputs = model(inputs)
+            running_loss = 0.0
+            for i, data in enumerate(loader, 0):
+            # get the inputs; data is a list of [inputs, labels]
+                inputs, labels = data
+                inputs, labels = inputs.to(device), labels.to(device)
 
-				loss = criterion(outputs[0], labels)
-				loss.backward()
-				optimizer.step()
-				# print statistics
+                # zero the parameter gradients
+                optimizer.zero_grad()
+                # forward + backward + optimize
+                outputs = model(inputs)
 
-				running_loss += loss.item()
+                loss = criterion(outputs[0], labels)
+                loss.backward()
+                optimizer.step()
+                # print statistics
 
-				if i % 20 == 19:    # print every 50 mini-batches
-					print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss/20))
-					running_loss = 0.0
+                running_loss += loss.item()
 
-			torch.save(model, "bert_model_{}.mdl".format(trainsize))
+                if i % 20 == 19:    # print every 20 mini-batches
+                    print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss/20))
+                    running_loss = 0.0
 
-run()
+            torch.save(model, "bert_model_{}.mdl".format(trainsize))
+
+run(sys.argv[1])

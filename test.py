@@ -3,6 +3,8 @@ import pandas as pd
 from transformers import DistilBertTokenizer
 import numpy as np
 
+LABEL_CORRECT = 1
+LABEL_INCORRECT = 0
 MODEL_NAME_FORMAT = "bert_model_{}.mdl"
 
 use_cuda = torch.cuda.is_available()
