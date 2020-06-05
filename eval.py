@@ -22,10 +22,10 @@ def main(args):
     pred_answers_list = [l.strip().split(',') for l in open(preds_file, 'r')]
     pred_answers_list = list(zip(*pred_answers_list))
 
-    # training_split = ['XS', 'S', 'M', 'L', 'XL']
-    # training_sizes = [160, 640, 2558, 10234, 40398]
-    training_split = ['XS']
-    training_sizes = [160]
+    training_split = ['XS', 'S', 'M', 'L', 'XL']
+    training_sizes = [160, 640, 2558, 10234, 40398]
+    # training_split = ['XS']
+    # training_sizes = [160]
     x = [math.log2(t) for t in training_sizes]
     x_diff = max(x)-min(x)
 
@@ -40,7 +40,7 @@ def main(args):
         results['accuracy_' + train_name] = accuracy
         y.append(accuracy)
 
-    # results["AUC"] = auc(x, y)/x_diff       # normalized area under (learing) curve
+    results["AUC"] = auc(x, y)/x_diff       # normalized area under (learing) curve
 
     with open(metrics_output_file, "w") as f:
         f.write(json.dumps(results))
