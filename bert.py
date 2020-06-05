@@ -36,7 +36,7 @@ def get_model(model_name):
         return None
 
 def run(model_name):
-    for trainsize in ['xs']:#, 's', 'm', 'l', 'xl']:
+    for trainsize in ['xs', 's', 'm', 'l', 'xl']:
         print("TRAIN SIZE: " + trainsize)
         df = pd.read_json('./data/train_{}.jsonl'.format(trainsize), lines=True)
 
