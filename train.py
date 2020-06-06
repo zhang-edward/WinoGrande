@@ -1,4 +1,5 @@
 from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, RobertaTokenizer, RobertaForSequenceClassification
+from torchsummary import summary
 import torch
 import torch
 import torch.optim
@@ -20,7 +21,7 @@ def get_model(model_name):
         print("Not a valid model!")
         return None
 
-def train_model(model_name, X_data, y_data, save_model_name):
+def train_model(model_name, X_data, y_data, save_model_name, freeze_hidden_layers=True):
 	use_cuda = torch.cuda.is_available()
 	device = torch.device("cuda" if use_cuda else "cpu")
 	print("Device: ", device)
@@ -40,6 +41,11 @@ def train_model(model_name, X_data, y_data, save_model_name):
 	# # print(n)
 	# # p = model(n)
 	# # print(p[0].data[0][0] > p[0].data[0][1])
+
+	if (freeze_hidden_layers):
+		for param in model.distilbert.parameters():
+			param.requires_grad = False
+	summary(model, input_data=X_train[0].unsqueeze(0))
 
 	batch_size = 32
 	dataset = Dataset(X_train, y_train)
