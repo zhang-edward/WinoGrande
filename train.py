@@ -48,7 +48,7 @@ def train_model(model_name, X_data, y_data, save_model_name, freeze_hidden_layer
 
 	summary(model, input_data=X_train[0].unsqueeze(0))
 
-	batch_size = 32
+	batch_size = 64
 	dataset = Dataset(X_train, y_train)
 	loader = DataLoader(dataset, batch_size, shuffle=True)
 	model = model.to(device)
