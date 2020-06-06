@@ -3,7 +3,6 @@ import pandas as pd
 from transformers import DistilBertTokenizer
 import numpy as np
 from train import get_model
-from defs import TestDataset
 import sys
 
 LABEL_CORRECT = 1
