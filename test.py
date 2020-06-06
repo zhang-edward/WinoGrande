@@ -7,7 +7,7 @@ import sys
 
 LABEL_CORRECT = 1
 LABEL_INCORRECT = 0
-MODEL_NAME_FORMAT = "bert_model_{}.mdl"
+MODEL_NAME_FORMAT = "{}_model_{}"
 
 use_cuda = torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")
@@ -25,7 +25,7 @@ def run(model_name):
   for index, row in df.iterrows():
       pred = []
       for trainsize in ['xs', 's', 'm', 'l', 'xl']:
-          model_name = MODEL_NAME_FORMAT.format(trainsize)
+          model_name = MODEL_NAME_FORMAT.format(model_name, trainsize)
           model = torch.load(model_name, map_location=device)
           model.eval()
 
