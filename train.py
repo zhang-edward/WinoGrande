@@ -8,25 +8,29 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from defs import Dataset
 
-def get_model(model_name):
-    if model_name.lower() == "distilbert":
-        return (
-            DistilBertTokenizer.from_pretrained('distilbert-base-cased'),
-            DistilBertForSequenceClassification.from_pretrained('distilbert-base-cased'))
-    elif model_name.lower() == "roberta":
-        return (
-            RobertaTokenizer.from_pretrained('roberta-base'),
-            RobertaForSequenceClassification.from_pretrained('roberta-base'))
-    else:
-        print("Not a valid model!")
-        return None
+def get_model(model_name, freeze):
+	if model_name.lower() == "distilbert":
+		model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-cased')
+		if (freeze):
+			for param in model.distilbert.parameters():
+				param.requires_grad = False
+		return (DistilBertTokenizer.from_pretrained('distilbert-base-cased'), model)
+	elif model_name.lower() == "roberta":
+		model = RobertaForSequenceClassification.from_pretrained('roberta-base')
+		if (freeze):
+			for param in model.roberta.parameters():
+				param.requires_grad = False
+		return (RobertaTokenizer.from_pretrained('roberta-base'), model)
+	else:
+		print("Not a valid model!")
+		return None
 
 def train_model(model_name, X_data, y_data, save_model_name, freeze_hidden_layers=True):
 	use_cuda = torch.cuda.is_available()
 	device = torch.device("cuda" if use_cuda else "cpu")
 	print("Device: ", device)
 
-	tokenizer, model = get_model(model_name)
+	tokenizer, model = get_model(model_name, freeze_hidden_layers)
 
 	print('Number of training examples: {:,}\n'.format(len(y_data)))
 
@@ -42,9 +46,6 @@ def train_model(model_name, X_data, y_data, save_model_name, freeze_hidden_layer
 	# # p = model(n)
 	# # print(p[0].data[0][0] > p[0].data[0][1])
 
-	if (freeze_hidden_layers):
-		for param in model.distilbert.parameters():
-			param.requires_grad = False
 	summary(model, input_data=X_train[0].unsqueeze(0))
 
 	batch_size = 32
