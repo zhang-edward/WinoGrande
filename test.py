@@ -15,17 +15,17 @@ device = torch.device("cuda" if use_cuda else "cpu")
 # model = torch.load(MODEL_NAME, map_location=device)
 # model.eval()
 
-def run(model_name):
+def run(model_name_param):
   df = pd.read_json('./data/dev.jsonl', lines=True)
 
   y_pred = []
 
-  tokenizer, _ = get_model(model_name)
+  tokenizer, _ = get_model(model_name_param)
 
   for index, row in df.iterrows():
       pred = []
       for trainsize in ['xs', 's', 'm', 'l', 'xl']:
-          model_name = MODEL_NAME_FORMAT.format(model_name, trainsize)
+          model_name = MODEL_NAME_FORMAT.format(model_name_param, trainsize)
           model = torch.load(model_name, map_location=device)
           model.eval()
 
