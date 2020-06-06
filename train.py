@@ -25,7 +25,7 @@ def get_model(model_name, freeze):
 		print("Not a valid model!")
 		return None
 
-def train_model(model_name, X_data, y_data, save_model_name, freeze_hidden_layers=True):
+def train_model(model_name, X_data, y_data, save_model_name, freeze_hidden_layers=True, num_epochs=5):
 	use_cuda = torch.cuda.is_available()
 	device = torch.device("cuda" if use_cuda else "cpu")
 	print("Device: ", device)
@@ -56,7 +56,7 @@ def train_model(model_name, X_data, y_data, save_model_name, freeze_hidden_layer
 	criterion = nn.BCEWithLogitsLoss()
 	optimizer = torch.optim.Adam(model.parameters())
 
-	for epoch in range(5):  # loop over the dataset multiple times
+	for epoch in range(num_epochs):  # loop over the dataset multiple times
 
 		running_loss = 0.0
 		for i, data in enumerate(loader, 0):
@@ -79,5 +79,5 @@ def train_model(model_name, X_data, y_data, save_model_name, freeze_hidden_layer
 			if i % 20 == 19:    # print every 20 mini-batches
 				print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss/20))
 				running_loss = 0.0
-		
+
 		torch.save(model, save_model_name)
