@@ -8,7 +8,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from defs import Dataset
 
-def get_model(model_name, freeze):
+def get_model(model_name, freeze=True):
 	if model_name.lower() == "distilbert":
 		model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-cased')
 		if (freeze):
