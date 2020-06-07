@@ -1,16 +1,18 @@
 import numpy as np
 import pandas as pd 
 import torch
+import json
+import random
 
 # MaskedWiki (downsampled) download link: 
 # https://ora.ox.ac.uk/objects/uuid:9b34602b-c982-4b49-b4f4-6555b5a82c3d/download_file?file_format=zip&safe_filename=MaskedWiki_downsampled.zip&type_of_work=Dataset
 
 print ("Reading file...")
 data = []
-with open("MaskedWiki_sample.txt") as f:
+with open("WikiCREM_dev.txt") as f:
     i = 0
     example = []
-    while i < 100000:
+    while True:
         line = f.readline()
         if line == "":
             break
@@ -22,29 +24,49 @@ with open("MaskedWiki_sample.txt") as f:
         i += 1
         print("Loaded {} examples".format(int((i+1)/5)), end="\r")
 print("")
+
+'''
+{
+"qID": "3QHITW7OYO7Q6B6ISU2UMJB84ZLAQE-2", 
+"sentence": "Ian volunteered to eat Dennis's menudo after already having a bowl because _ despised eating intestine.", 
+"option1": "Ian", 
+"option2": "Dennis",
+"answer": "2"
+}
+'''
+
 X = []
-y = []
+Y = []
 for ex in data:
     if (len(ex) < 4):
         print("found bad example")
         continue
     sentence, token, options, label = ex
     option1, option2 = options.split(",")
-    X.append(sentence.replace(token, option1 + " [SEP] "))
-    X.append(sentence.replace(token, option2 + " [SEP] "))
-    if (label == option1):
-        y.append([0.0, 1.0])
-        y.append([1.0, 0.0])
+    out_ex = {}
+    out_ex['sentence'] = sentence.replace("[MASK]", "_")
+
+    # option 1 is always correct
+    if random.random()>0.5:
+        out_ex['option1'] = option1
+        out_ex['option2'] = option2
+        answer = "1"
     else:
-        y.append([1.0, 0.0])
-        y.append([0.0, 1.0])
+        out_ex['option1'] = option2
+        out_ex['option2'] = option1
+        answer = "2"
 
-with open('masked-wiki_X.txt', 'w') as f:
+    out_ex['answer'] = answer
+    X.append(out_ex)
+    Y.append(answer)
+
+with open('val_x.txt', 'w') as f:
     for x in X:
-        f.write(x + "\n")
+        f.write(json.dumps(x) + "\n")
 
-y = torch.tensor(y)
-torch.save(y, 'masked-wiki_y.pt')
+with open('val_y.txt', 'w') as f:
+    for y in Y:
+        f.write(y + "\n")
 
 # # you may also want to remove whitespace characters like `\n` at the end of each line
 # content = np.array([x.strip() for x in content])
