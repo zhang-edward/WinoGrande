@@ -1,3 +1,6 @@
+import torch
+from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, RobertaTokenizer, RobertaForSequenceClassification
+import torch
 import sys
 import pandas as pd
 import numpy as np
@@ -14,6 +17,22 @@ from train import train_model
 "option2": "Dennis",
 "answer": "2"
 '''
+def get_model(model_name, freeze=True):
+	if model_name.lower() == "distilbert":
+		model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-cased')
+		if (freeze):
+			for param in model.distilbert.parameters():
+				param.requires_grad = False
+		return (DistilBertTokenizer.from_pretrained('distilbert-base-cased'), model)
+	elif model_name.lower() == "roberta":
+		model = RobertaForSequenceClassification.from_pretrained('roberta-base')
+		if (freeze):
+			for param in model.roberta.parameters():
+				param.requires_grad = False
+		return (RobertaTokenizer.from_pretrained('roberta-base'), model)
+	else:
+		print("Not a valid model!")
+		return None
 
 def run(model_name):
     for trainsize in ['xs', 's', 'm', 'l', 'xl']:
@@ -33,6 +52,11 @@ def run(model_name):
                 y_data.append([1.0, 0.0])
                 y_data.append([0.0, 1.0])
 
-        train_model(model_name, X_data, y_data, '{}_model_{}'.format(model_name, trainsize))
+        tokenizer, model = get_model(model_name, True)
+        
+        X_train = torch.tensor([tokenizer.encode(d, pad_to_max_length="True") for d in X_data])
+        y_train = torch.tensor(y_data)
+
+        train_model(model, X_data, y_data, '{}_model_{}'.format(model_name, trainsize))
 
 run(sys.argv[1])

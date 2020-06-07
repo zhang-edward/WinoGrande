@@ -1,6 +1,4 @@
-from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, RobertaTokenizer, RobertaForSequenceClassification
 from torchsummary import summary
-import torch
 import torch
 import torch.optim
 import torch.nn as nn
@@ -8,37 +6,16 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from defs import Dataset
 
-def get_model(model_name, freeze=True):
-	if model_name.lower() == "distilbert":
-		model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-cased')
-		if (freeze):
-			for param in model.distilbert.parameters():
-				param.requires_grad = False
-		return (DistilBertTokenizer.from_pretrained('distilbert-base-cased'), model)
-	elif model_name.lower() == "roberta":
-		model = RobertaForSequenceClassification.from_pretrained('roberta-base')
-		if (freeze):
-			for param in model.roberta.parameters():
-				param.requires_grad = False
-		return (RobertaTokenizer.from_pretrained('roberta-base'), model)
-	else:
-		print("Not a valid model!")
-		return None
-
-def train_model(model_name, X_data, y_data, save_model_name, freeze_hidden_layers=True, num_epochs=5):
+def train_model(model, X_data, y_data, save_model_name, num_epochs=5):
 	use_cuda = torch.cuda.is_available()
 	device = torch.device("cuda" if use_cuda else "cpu")
 	print("Device: ", device)
 
-	tokenizer, model = get_model(model_name, freeze_hidden_layers)
 
 	print('Number of training examples: {:,}\n'.format(len(y_data)))
 
-	X_train = torch.tensor([tokenizer.encode(d, pad_to_max_length="True") for d in X_data])
-	y_train = torch.tensor(y_data)
-
-	print("X shape:", X_train.shape)
-	print("y shape:", y_train.shape)
+	print("X shape:", X_data.shape)
+	print("y shape:", y_data.shape)
 
 	# n = tokenizer.encode(X_data[0])
 	# n = torch.tensor(n).unsqueeze(0)
@@ -46,10 +23,12 @@ def train_model(model_name, X_data, y_data, save_model_name, freeze_hidden_layer
 	# # p = model(n)
 	# # print(p[0].data[0][0] > p[0].data[0][1])
 
-	summary(model, input_data=X_train[0].unsqueeze(0))
+	# summary(model, input_data=X_data[0].unsqueeze(0))
+
+	print(model)
 
 	batch_size = 64
-	dataset = Dataset(X_train, y_train)
+	dataset = Dataset(X_data, y_data)
 	loader = DataLoader(dataset, batch_size, shuffle=True)
 	model = model.to(device)
 
