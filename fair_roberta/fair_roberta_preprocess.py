@@ -12,6 +12,17 @@ use_cuda = torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")
 roberta.to(device)
 
+def tokenize(enc, r):
+	ans = []
+	for e in enc:
+		if e == 0:
+			ans.append("<s>")
+		elif e == 2:
+			ans.append("</s>")
+		else: 
+			ans.append(r.decode(torch.tensor([e])).strip())
+	return ans
+
 for size in ['xs', 's', 'm', 'l', 'xl']:
 	print ("Loading data: {}".format(size))
 	df = pd.read_json('../data/train_{}.jsonl'.format(size), lines=True)
@@ -45,15 +56,17 @@ for size in ['xs', 's', 'm', 'l', 'xl']:
 		with torch.no_grad():
 			encode1 = roberta.encode(sentence1)
 			encode2 = roberta.encode(sentence2)
-			encode_dict1['tokens'] = encode1
-			encode_dict2['tokens'] = encode2
-			encode_dict1['encoding'] = roberta.extract_features(encode1)[:,0].cpu()
-			encode_dict2['encoding'] = roberta.extract_features(encode2)[:,0].cpu()
+			encode_dict1['tokens'] = tokenize(encode1, roberta)
+			encode_dict2['tokens'] = tokenize(encode2, roberta)
+			encode_dict1['sentence'] = sentence1
+			encode_dict2['sentence'] = sentence2
+			encode_dict1['options'] = (option1s[i], option2s[i])
+			encode_dict2['options'] = (option2s[i], option1s[i])
+			encode_dict1['encoding'] = roberta.extract_features(encode1).cpu()
+			encode_dict2['encoding'] = roberta.extract_features(encode2).cpu()
 		X_features.append(encode_dict1)
 		X_features.append(encode_dict2)
 		torch.cuda.empty_cache()
-		if i == 5:
-			break
 	torch.save(X_features, "X_{}.pt".format(size))
 	torch.save(torch.tensor(y_data), "y_{}.pt".format(size))
 	print('Saved to X_{}.pt, y_{}.pt'.format(size, size))
