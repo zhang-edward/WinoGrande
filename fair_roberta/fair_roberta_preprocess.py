@@ -6,7 +6,7 @@ import en_core_web_lg
 import re
 import torch
 
-roberta = RobertaModel.from_pretrained('models', checkpoint_file='model.pt')
+roberta = RobertaModel.from_pretrained('models', checkpoint_file='model_mw.pt')
 roberta.eval()  # disable dropout (or leave in train mode to finetune)
 use_cuda = torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")
@@ -67,8 +67,8 @@ for size in ['xs', 's', 'm', 'l', 'xl']:
 		X_features.append(encode_dict1)
 		X_features.append(encode_dict2)
 		torch.cuda.empty_cache()
-	torch.save(X_features, "X_{}.pt".format(size))
-	torch.save(torch.tensor(y_data), "y_{}.pt".format(size))
+	torch.save(X_features, "mw_data/X_{}.pt".format(size))
+	torch.save(torch.tensor(y_data), "mw_data/y_{}.pt".format(size))
 	print('Saved to X_{}.pt, y_{}.pt'.format(size, size))
 
 	
