@@ -91,8 +91,12 @@ def convert_preprocessed_row_to_graph(row):
             edge_type.append(2)
 
         if is_target(token, options, parsed_options):
-            offsets.append(token.i)
-            offset_words.append(token.text)
+            if len(offsets) == 3:
+                offsets[2] = token.i
+                offset_words.append(token.text)
+            else:
+                offsets.append(token.i)
+                offset_words.append(token.text)
 
     num_nodes, tran_edges = transfer_n_e(nodes, edges)
 
