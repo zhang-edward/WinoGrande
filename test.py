@@ -30,18 +30,9 @@ def run(model_name_param):
     # dataset = TestDataset(X_test)
     # loader = DataLoader(dataset)
     print(model_name_param)
-    print("fuck you")
     y_pred = []
 
-    if (model_name_param == "fair"):
-        roberta = RobertaModel.from_pretrained('fair_roberta/models', checkpoint_file='model.pt')
-        roberta.eval()  # disable dropout (or leave in train mode to finetune)
-        use_cuda = torch.cuda.is_available()
-        device = torch.device("cuda" if use_cuda else "cpu")
-        roberta.to(device)
-        tokenizer = roberta
-    else:
-        tokenizer, _ = get_model(model_name_param)
+    tokenizer, _ = get_model(model_name_param)
 
     for trainsize in ['xs', 's', 'm', 'l', 'xl']:
         pred = []
@@ -50,13 +41,13 @@ def run(model_name_param):
         model.eval()
         for index, row in df.iterrows():
             input = row['sentence'].replace('_', row['option1'] + " [SEP] ")
-            tok_input = torch.tensor(tokenizer.encode(input)).unsqueeze(0)
+            tok_input = torch.tensor(tokenizer.encode(input, pad_to_max_length="True")).unsqueeze(0)
             tok_input = tok_input.to(device)
             output = model(tok_input)
             output_logits_1 = output[0].cpu().detach().numpy()
 
             input = row['sentence'].replace('_', row['option2'] + " [SEP] ")
-            tok_input = torch.tensor(tokenizer.encode(input)).unsqueeze(0)
+            tok_input = torch.tensor(tokenizer.encode(input, pad_to_max_length="True")).unsqueeze(0)
             tok_input = tok_input.to(device)
             output = model(tok_input)
             output_logits_2 = output[0].cpu().detach().numpy()
