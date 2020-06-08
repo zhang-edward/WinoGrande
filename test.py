@@ -50,13 +50,13 @@ def run(model_name_param):
         model.eval()
         for index, row in df.iterrows():
             input = row['sentence'].replace('_', row['option1'] + " [SEP] ")
-            tok_input = torch.tensor(tokenizer.encode(input, pad_to_max_length="True")).unsqueeze(0)
+            tok_input = torch.tensor(tokenizer.encode(input)).unsqueeze(0)
             tok_input = tok_input.to(device)
             output = model(tok_input)
             output_logits_1 = output[0].cpu().detach().numpy()
 
             input = row['sentence'].replace('_', row['option2'] + " [SEP] ")
-            tok_input = torch.tensor(tokenizer.encode(input, pad_to_max_length="True")).unsqueeze(0)
+            tok_input = torch.tensor(tokenizer.encode(input)).unsqueeze(0)
             tok_input = tok_input.to(device)
             output = model(tok_input)
             output_logits_2 = output[0].cpu().detach().numpy()
