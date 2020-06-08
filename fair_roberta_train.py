@@ -32,4 +32,6 @@ for size in ['xs', 's', 'm', 'l', 'xl']:
 	X_data = torch.load("fair_roberta/X_{}.pt".format(size))
 	y_data = torch.load("fair_roberta/y_{}.pt".format(size))
 
-	train_model(model, X_data, y_data, "model_{}.pt".format(size))
+	X_data = [x['encoding'] for x in X_data]
+	X_data = torch.stack(X_data).squeeze(1)
+	train_model(model, X_data, y_data, "fair_model_{}.pt".format(size))
