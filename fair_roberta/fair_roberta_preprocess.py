@@ -8,6 +8,9 @@ import torch
 
 roberta = RobertaModel.from_pretrained('models', checkpoint_file='model.pt')
 roberta.eval()  # disable dropout (or leave in train mode to finetune)
+use_cuda = torch.cuda.is_available()
+device = torch.device("cuda" if use_cuda else "cpu")
+roberta.to(device)
 
 for size in ['xs', 's', 'm', 'l', 'xl']:
 	print ("Loading data: {}".format(size))
@@ -37,9 +40,10 @@ for size in ['xs', 's', 'm', 'l', 'xl']:
 			y_data.append([1.0, 0.0])
 			y_data.append([0.0, 1.0])
 
-		X_features.append(roberta.extract_features_aligned_to_words(sentence1)[0].vector)
-		X_features.append(roberta.extract_features_aligned_to_words(sentence2)[0].vector)
-
+		with torch.no_grad():
+			X_features.append(roberta.extract_features(roberta.encode(sentence1))[0].cpu())
+			X_features.append(roberta.extract_features(roberta.encode(sentence2))[0].cpu())
+		torch.cuda.empty_cache()
 	torch.save(torch.stack(X_features, dim=0), "X_{}.pt".format(size))
 	torch.save(torch.tensor(y_data), "y_{}.pt".format(size))
 	print('Saved to X_{}.pt, y_{}.pt'.format(size, size))
