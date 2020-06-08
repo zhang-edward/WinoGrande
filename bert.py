@@ -59,4 +59,5 @@ def run(model_name):
 
         train_model(model, X_train, y_train, '{}_model_{}'.format(model_name, trainsize))
 
-run(sys.argv[1])
+if __name__ == '__main__':
+	run(sys.argv[1])

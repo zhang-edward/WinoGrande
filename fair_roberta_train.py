@@ -26,12 +26,13 @@ class ClassificationHead(nn.Module):
 		out = self.out_dense(out)
 		return out, "foo"
 
-model = ClassificationHead(1024, 768, 2, 0.1)
+if __name__ == '__main__':
+	model = ClassificationHead(1024, 768, 2, 0.1)
 
-for size in ['xs', 's', 'm', 'l', 'xl']:
-	X_data = torch.load("fair_roberta/X_{}.pt".format(size))
-	y_data = torch.load("fair_roberta/y_{}.pt".format(size))
+	for size in ['xs', 's', 'm', 'l', 'xl']:
+		X_data = torch.load("fair_roberta/X_{}.pt".format(size))
+		y_data = torch.load("fair_roberta/y_{}.pt".format(size))
 
-	X_data = [x['encoding'] for x in X_data]
-	X_data = torch.stack(X_data).squeeze(1)
-	train_model(model, X_data, y_data, "fair_model_{}.pt".format(size))
+		X_data = [x['encoding'] for x in X_data]
+		X_data = torch.stack(X_data).squeeze(1)
+		train_model(model, X_data, y_data, "fair_model_{}.pt".format(size))

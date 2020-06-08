@@ -3,10 +3,10 @@ import pandas as pd
 import numpy as np
 import sys
 import en_core_web_lg
-from train import get_model
+from bert import get_model
 from fairseq.models.roberta import RobertaModel
 from examples.roberta.wsc import wsc_utils
-
+from fair_roberta_train import ClassificationHead
 
 LABEL_CORRECT = 1
 LABEL_INCORRECT = 0
@@ -29,11 +29,12 @@ def run(model_name_param):
     # X_test = torch.tensor([tokenizer.encode(d, pad_to_max_length="True") for d in X_data])
     # dataset = TestDataset(X_test)
     # loader = DataLoader(dataset)
-
+    print(model_name_param)
+    print("fuck you")
     y_pred = []
 
     if (model_name_param == "fair"):
-        roberta = RobertaModel.from_pretrained('models', checkpoint_file='fair_roberta/models/model.pt')
+        roberta = RobertaModel.from_pretrained('fair_roberta/models', checkpoint_file='model.pt')
         roberta.eval()  # disable dropout (or leave in train mode to finetune)
         use_cuda = torch.cuda.is_available()
         device = torch.device("cuda" if use_cuda else "cpu")
