@@ -4,7 +4,7 @@ import torch
 import sys
 import pandas as pd
 import numpy as np
-from train import train_model
+from train_model import train_model
 
 '''
 [CLS] Ian volunteered to eat Dennis's menudo after already having a bowl because Ian [SEP] despised eating intestine. [SEP]",
@@ -53,10 +53,10 @@ def run(model_name):
                 y_data.append([0.0, 1.0])
 
         tokenizer, model = get_model(model_name, True)
-        
+
         X_train = torch.tensor([tokenizer.encode(d, pad_to_max_length="True") for d in X_data])
         y_train = torch.tensor(y_data)
 
-        train_model(model, X_data, y_data, '{}_model_{}'.format(model_name, trainsize))
+        train_model(model, X_train, y_train, '{}_model_{}'.format(model_name, trainsize))
 
 run(sys.argv[1])

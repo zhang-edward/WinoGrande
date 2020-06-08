@@ -1,14 +1,20 @@
-def train_model(model_name, X_data, y_data, save_model_name, num_epochs=5):
+from torchsummary import summary
+import torch
+import torch.optim
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.utils.data import DataLoader
+from defs import Dataset
+
+def train_model(model, X_data, y_data, save_model_name, num_epochs=5):
 	use_cuda = torch.cuda.is_available()
 	device = torch.device("cuda" if use_cuda else "cpu")
 	print("Device: ", device)
+
 	print('Number of training examples: {:,}\n'.format(len(y_data)))
 
-	X_train = torch.tensor([tokenizer.encode(d, pad_to_max_length="True") for d in X_data])
-	y_train = torch.tensor(y_data)
-
-	print("X shape:", X_train.shape)
-	print("y shape:", y_train.shape)
+	print("X shape:", X_data.shape)
+	print("y shape:", y_data.shape)
 
 	# n = tokenizer.encode(X_data[0])
 	# n = torch.tensor(n).unsqueeze(0)
@@ -16,12 +22,12 @@ def train_model(model_name, X_data, y_data, save_model_name, num_epochs=5):
 	# # p = model(n)
 	# # print(p[0].data[0][0] > p[0].data[0][1])
 
-	# summary(model, input_data=X_train[0].unsqueeze(0))
+	summary(model, input_data=X_data[0].unsqueeze(0))
 
-	print(model)
+	# print(model)
 
 	batch_size = 64
-	dataset = Dataset(X_train, y_train)
+	dataset = Dataset(X_data, y_data)
 	loader = DataLoader(dataset, batch_size, shuffle=True)
 	model = model.to(device)
 
