@@ -119,9 +119,9 @@ def convert_preprocessed_row_to_graph(row):
         embedding = bert_embedding_for_dp_token(dp_token, bert_tokens, bert_embeddings)
         if(torch.isnan(embedding.unsqueeze(0)).any()):
             print("UNEXPECTED: bert_embedding_for_dp_token returns NaN")
-            print(embedding.unsqueeze(0))
-            print(token.i, token.text, sentence, bert_tokens)
-            print(spacy_tokens)
+            # print(embedding.unsqueeze(0))
+            # print(token.i, token.text, sentence, bert_tokens)
+            # print(spacy_tokens)
             G.nodes[ nodes[token.i] ].data['h'] = torch.randn(1024).unsqueeze(0)
         else:
             G.nodes[ nodes[token.i] ].data['h'] = embedding.unsqueeze(0)
@@ -130,9 +130,9 @@ def convert_preprocessed_row_to_graph(row):
         embedding = bert_embedding_for_dp_token(head_dp_token, bert_tokens, bert_embeddings)
         if(torch.isnan(embedding.unsqueeze(0)).any()):
             print("UNEXPECTED: bert_embedding_for_dp_token returns NaN")
-            print(embedding.unsqueeze(0))
-            print(token.i, token.head.i, token.head.text, sentence, bert_tokens)
-            print(spacy_tokens)
+            # print(embedding.unsqueeze(0))
+            # print(token.i, token.head.i, token.head.text, sentence, bert_tokens)
+            # print(spacy_tokens)
             G.nodes[ nodes[token.head.i] ].data['h'] = torch.randn(1024).unsqueeze(0)
         else:
             G.nodes[ nodes[token.head.i] ].data['h'] = embedding.unsqueeze(0)
@@ -172,6 +172,12 @@ def is_target(dp_token, options, parsed_options, debug=False):
 
     if (dp_token.lemma_.lower() == parsed_options[1][0].lemma_.lower()):
         return True
+
+    if ((token.pos_ == "PROPN" or token.pos_ == "NOUN") and token.text[-1] == 's'):
+        if (token.text[:-1].lower() == parsed_options[0][0].lemma_.lower()):
+            return True
+        if (token.text[:-1].lower() == parsed_options[1][0].lemma_.lower()):
+            return True
 
     return False
 
