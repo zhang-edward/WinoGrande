@@ -7,6 +7,8 @@ import en_core_web_lg
 import pprint
 import collections
 
+import re
+
 import dgl
 from dgl import DGLGraph
 from dgl.data import MiniGCDataset
