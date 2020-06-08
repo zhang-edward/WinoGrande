@@ -41,8 +41,8 @@ for size in ['xs', 's', 'm', 'l', 'xl']:
 			y_data.append([0.0, 1.0])
 
 		with torch.no_grad():
-			X_features.append(roberta.extract_features(roberta.encode(sentence1))[0].cpu())
-			X_features.append(roberta.extract_features(roberta.encode(sentence2))[0].cpu())
+			X_features.append(roberta.extract_features(roberta.encode(sentence1))[:,0].cpu())
+			X_features.append(roberta.extract_features(roberta.encode(sentence2))[:,0].cpu())
 		torch.cuda.empty_cache()
 	torch.save(torch.stack(X_features, dim=0), "X_{}.pt".format(size))
 	torch.save(torch.tensor(y_data), "y_{}.pt".format(size))
