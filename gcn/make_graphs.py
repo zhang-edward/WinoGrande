@@ -22,7 +22,7 @@ import numpy as np
 parser = en_core_web_lg.load()
 
 def run():
-    for size in ['xs']:
+    for size in ['s']:
         X_preprocessed = torch.load("data/bert_preprocessed/X_{}.pt".format(size)) # load BERT pre-processed data from disk
         all_graphs, gcn_offsets, cls_tokens = convert_preprocessed_rows_to_graph(X_preprocessed)
 
@@ -52,6 +52,7 @@ def convert_preprocessed_row_to_graph(row):
     bert_embeddings = row['encoding'][0]
     bert_tokens = row['tokens']
     options = row['options']
+    parsed_options = (parser(options[0]), parser(options[1]))
 
     doc = parser(sentence)
     nodes = collections.OrderedDict()
@@ -68,7 +69,7 @@ def convert_preprocessed_row_to_graph(row):
         spacy_tokens.append(token)
 
         # skip words that aren't targets or separated by one edge from target
-        if not (is_target(token.text, options) or is_target(token.head.text, options)):
+        if not (is_target(token, options, parsed_options) or is_target(token, options, parsed_options)):
             continue
 
         if token.i not in nodes:
@@ -87,7 +88,7 @@ def convert_preprocessed_row_to_graph(row):
             edges.append( [ token.i, token.head.i ])
             edge_type.append(2)
 
-        if is_target(token.text, options):
+        if is_target(token, options, parsed_options):
             offsets.append(token.i)
             offset_words.append(token.text)
 
@@ -105,7 +106,7 @@ def convert_preprocessed_row_to_graph(row):
     G.add_edges(list(zip(*tran_edges))[0], list(zip(*tran_edges))[1])
 
     for token in doc:
-        if not (is_target(token.text, options) or is_target(token.head.text, options)):
+        if not (is_target(token, options, parsed_options) or is_target(token, options, parsed_options)):
             continue
 
         dp_token = token.text
@@ -145,12 +146,25 @@ def convert_preprocessed_row_to_graph(row):
 
     return G, gcn_offset, bert_embeddings[0]
 
-def is_target(dp_token, options, debug=False):
+def is_target(dp_token, options, parsed_options, debug=False):
 
-    if dp_token == options[0].split(' ')[0]:
+    option0 = re.split(' |-', options[0])[0]
+    option1 = re.split(' |-', options[1])[0]
+
+    option0_lemmatized = option0
+    option1_lemmatized = option1
+    dp_token_lemmatized = dp_token
+
+    if dp_token.text == option0:
         return True
 
-    if dp_token == options[1].split(' ')[0]:
+    if dp_token.text == option1:
+        return True
+
+    if (dp_token.lemma_.lower() == parsed_options[0][0].lemma_.lower()):
+        return True
+
+    if (dp_token.lemma_.lower() == parsed_options[1][0].lemma_.lower()):
         return True
 
     return False
