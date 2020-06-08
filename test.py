@@ -5,12 +5,10 @@ import sys
 import en_core_web_lg
 from bert import get_model
 from fairseq.models.roberta import RobertaModel
-from examples.roberta.wsc import wsc_utils
-from fair_roberta_train import ClassificationHead
 
 LABEL_CORRECT = 1
 LABEL_INCORRECT = 0
-MODEL_NAME_FORMAT = "{}_model_{}"
+MODEL_NAME_FORMAT = "gcn_model_{}.pt"
 
 use_cuda = torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")
@@ -19,64 +17,69 @@ device = torch.device("cuda" if use_cuda else "cpu")
 # model.eval()
 
 def run(model_name_param):
-    df = pd.read_json('./data/dev.jsonl', lines=True)
+	df = pd.read_json('./data/dev.jsonl', lines=True)
 
-    # X_data = []
-    # for index, row in df.iterrows():
-    #     X_data.append(row['sentence'].replace('_', row['option1'] + " [SEP] "))
-    #     X_data.append(row['sentence'].replace('_', row['option2'] + " [SEP] "))
+	# X_data = []
+	# for index, row in df.iterrows():
+	#     X_data.append(row['sentence'].replace('_', row['option1'] + " [SEP] "))
+	#     X_data.append(row['sentence'].replace('_', row['option2'] + " [SEP] "))
 
-    # X_test = torch.tensor([tokenizer.encode(d, pad_to_max_length="True") for d in X_data])
-    # dataset = TestDataset(X_test)
-    # loader = DataLoader(dataset)
-    print(model_name_param)
-    y_pred = []
+	# X_test = torch.tensor([tokenizer.encode(d, pad_to_max_length="True") for d in X_data])
+	# dataset = TestDataset(X_test)
+	# loader = DataLoader(dataset)
+	print(model_name_param)
+	y_pred = []
 
-    tokenizer, _ = get_model(model_name_param)
+	tokenizer, _ = get_model(model_name_param)
 
-    for trainsize in ['xs', 's', 'm', 'l', 'xl']:
-        pred = []
-        model_name = MODEL_NAME_FORMAT.format(model_name_param, trainsize)
-        model = torch.load(model_name, map_location=device)
-        model.eval()
-        for index, row in df.iterrows():
-            input = row['sentence'].replace('_', row['option1'] + " [SEP] ")
-            tok_input = torch.tensor(tokenizer.encode(input, pad_to_max_length="True")).unsqueeze(0)
-            tok_input = tok_input.to(device)
-            output = model(tok_input)
-            output_logits_1 = output[0].cpu().detach().numpy()
+	for trainsize in ['xs', 's', 'm', 'l', 'xl']:
+		pred = []
+		model_name = MODEL_NAME_FORMAT.format(model_name_param, trainsize)
+		model = torch.load(model_name, map_location=device)
+		model.eval()
+		for index, row in df.iterrows():
+			input = row['sentence'].replace('_', row['option1'] + " [SEP] ")
+			tok_input = torch.tensor(tokenizer.encode(input, pad_to_max_length="True")).unsqueeze(0)
+			tok_input = tok_input.to(device)
+			output = model(tok_input)
+			output_logits_1 = output[0].cpu().detach().numpy()
 
-            input = row['sentence'].replace('_', row['option2'] + " [SEP] ")
-            tok_input = torch.tensor(tokenizer.encode(input, pad_to_max_length="True")).unsqueeze(0)
-            tok_input = tok_input.to(device)
-            output = model(tok_input)
-            output_logits_2 = output[0].cpu().detach().numpy()
+			input = row['sentence'].replace('_', row['option2'] + " [SEP] ")
+			tok_input = torch.tensor(tokenizer.encode(input, pad_to_max_length="True")).unsqueeze(0)
+			tok_input = tok_input.to(device)
+			output = model(tok_input)
+			output_logits_2 = output[0].cpu().detach().numpy()
 
-            pred1 = np.argmax(output_logits_1)
-            pred2 = np.argmax(output_logits_2)
+			pred.append(get_pred(output_logits_1, output_logits_2))
 
-            if (pred1 == pred2):
-                # we have a problem
-                diff1 = abs(output_logits_1[0][0] - output_logits_1[0][1])
-                diff2 = abs(output_logits_2[0][0] - output_logits_2[0][1])
+		y_pred.append(pred)
 
-                if pred1 == 0: # option 1 is more wrong, so predict 2
-                    pred.append(2) if diff1 > diff2 else pred.append(1)
-                else: # option 1 is more right, so predict 1
-                    pred.append(1) if diff1 > diff2 else pred.append(2)
-            else:
-                if pred1 == 1:
-                    pred.append(1)
-                elif pred2 == 1:
-                    pred.append(2)
+	# Transpose matrix
+	y_pred = list(map(list, zip(*y_pred)))
 
-        y_pred.append(pred)
+	with open("test_results.txt", "w") as f:
+		for row in y_pred:
+			f.write(",".join([str(n) for n in row]) + "\n")
 
-    # Transpose matrix
-    y_pred = list(map(list, zip(*y_pred)))
 
-    with open("test_results.txt", "w") as f:
-        for row in y_pred:
-            f.write(",".join([str(n) for n in row]) + "\n")
+def get_pred(output1, output2):
+	pred1 = np.argmax(output1)
+	pred2 = np.argmax(output2)
 
-run(sys.argv[1])
+	if (pred1 == pred2):
+		# we have a problem
+		diff1 = abs(output1[0][0] - output1[0][1])
+		diff2 = abs(output2[0][0] - output2[0][1])
+
+		if pred1 == 0: # option 1 is more wrong, so predict 2
+			return 2 if diff1 > diff2 else 1
+		else: # option 1 is more right, so predict 1
+			return 1 if diff1 > diff2 else 2
+	else:
+		if pred1 == 1:
+			return 1
+		elif pred2 == 1:
+			return 2
+
+if __name__ == '__main__':
+	run(sys.argv[1])
