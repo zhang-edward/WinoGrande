@@ -15,8 +15,8 @@ import spacy
 import collections
 import os
 
-from gcn.models.MainModel import GPRModel
-from gcn.utils import GPRDataset, collate
+from models.MainModel import GPRModel
+from utils import GPRDataset, collate
 
 size = 'xs'
 cls_tokens = torch.load('data/X_train_cls_tokens_{}.bin'.format(size))

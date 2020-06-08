@@ -5,7 +5,7 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from torch import autograd
 
-from gcn.models.GCNModel import RGCNModel
+from models.GCNModel import RGCNModel
 
 class Head(nn.Module):
     """The MLP submodule"""
