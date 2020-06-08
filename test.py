@@ -1,9 +1,12 @@
 import torch
 import pandas as pd
-from transformers import DistilBertTokenizer
 import numpy as np
-from train import get_model
 import sys
+import en_core_web_lg
+from train import get_model
+from fairseq.models.roberta import RobertaModel
+from examples.roberta.wsc import wsc_utils
+
 
 LABEL_CORRECT = 1
 LABEL_INCORRECT = 0
@@ -29,7 +32,15 @@ def run(model_name_param):
 
     y_pred = []
 
-    tokenizer, _ = get_model(model_name_param)
+    if (model_name_param == "fair"):
+        roberta = RobertaModel.from_pretrained('models', checkpoint_file='fair_roberta/models/model.pt')
+        roberta.eval()  # disable dropout (or leave in train mode to finetune)
+        use_cuda = torch.cuda.is_available()
+        device = torch.device("cuda" if use_cuda else "cpu")
+        roberta.to(device)
+        tokenizer = roberta
+    else:
+        tokenizer, _ = get_model(model_name_param)
 
     for trainsize in ['xs', 's', 'm', 'l', 'xl']:
         pred = []

@@ -40,11 +40,21 @@ for size in ['xs', 's', 'm', 'l', 'xl']:
 			y_data.append([1.0, 0.0])
 			y_data.append([0.0, 1.0])
 
+		encode_dict1 = {}
+		encode_dict2 = {}
 		with torch.no_grad():
-			X_features.append(roberta.extract_features(roberta.encode(sentence1))[:,0].cpu())
-			X_features.append(roberta.extract_features(roberta.encode(sentence2))[:,0].cpu())
+			encode1 = roberta.encode(sentence1)
+			encode2 = roberta.encode(sentence2)
+			encode_dict1['tokens'] = encode1
+			encode_dict2['tokens'] = encode2
+			encode_dict1['encoding'] = roberta.extract_features(encode1)[:,0].cpu()
+			encode_dict2['encoding'] = roberta.extract_features(encode2)[:,0].cpu()
+		X_features.append(encode_dict1)
+		X_features.append(encode_dict2)
 		torch.cuda.empty_cache()
-	torch.save(torch.stack(X_features, dim=0), "X_{}.pt".format(size))
+		if i == 5:
+			break
+	torch.save(X_features, "X_{}.pt".format(size))
 	torch.save(torch.tensor(y_data), "y_{}.pt".format(size))
 	print('Saved to X_{}.pt, y_{}.pt'.format(size, size))
 
