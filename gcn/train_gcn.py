@@ -25,6 +25,10 @@ all_graphs, _ = load_graphs("data/X_train_graphs_{}.bin".format(size))
 
 y_data = torch.load('data/y_{}.pt'.format(size))
 
+use_cuda = torch.cuda.is_available()
+device = torch.device("cuda" if use_cuda else "cpu")
+print("Device: ", device)
+
 train_dataset = GPRDataset(all_graphs, gcn_offsets, cls_tokens, y_data)
 
 train_dataloader = DataLoader(
@@ -35,6 +39,7 @@ train_dataloader = DataLoader(
 )
 
 model = GPRModel()
+model.to(device)
 criterion = nn.BCEWithLogitsLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=5e-3, weight_decay=1e-5)
 # optimizer = optim.SGD(model.parameters(), lr=1e-5, momentum=0.9)
@@ -49,6 +54,7 @@ for epoch in range(100):  # loop over the dataset multiple times
         with autograd.detect_anomaly():
             for i, data in enumerate(train_dataloader, 0):
                 graphs, gcn_offsets, cls_tokens, labels = data
+                graphs, gcn_offsets, cls_tokens = graphs.to(device), gcn_offsets.to(device), cls_tokens.to(device)
                 # inputs, labels = inputs.to(device), labels.to(device)
 
                 optimizer.zero_grad()

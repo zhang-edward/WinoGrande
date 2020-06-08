@@ -22,18 +22,17 @@ import numpy as np
 parser = en_core_web_lg.load()
 
 def run():
-    size = 'xs'
     for size in ['xs']:
-        X_preprocessed = torch.load("X_{}.pt".format(size)) # load BERT pre-processed data from disk
+        X_preprocessed = torch.load("data/bert_preprocessed/X_{}.pt".format(size)) # load BERT pre-processed data from disk
         all_graphs, gcn_offsets, cls_tokens = convert_preprocessed_rows_to_graph(X_preprocessed)
 
         cls_tokens = torch.stack(cls_tokens)
         gcn_offsets = torch.tensor(gcn_offsets)
 
         # https://docs.dgl.ai/en/0.4.x/generated/dgl.data.utils.load_graphs.html
-        save_graphs("data/X_train_graphs_{}_new.bin".format(size), all_graphs)
-        torch.save(cls_tokens, "data/X_train_cls_tokens_{}_new.bin".format(size))
-        torch.save(gcn_offsets, "data/X_train_gcn_offsets_{}_new.bin".format(size))
+        save_graphs("data/X_train_graphs_{}.bin".format(size), all_graphs)
+        torch.save(cls_tokens, "data/X_train_cls_tokens_{}.bin".format(size))
+        torch.save(gcn_offsets, "data/X_train_gcn_offsets_{}.bin".format(size))
 
 ### HELPER FUNCTIONS ####
 
