@@ -24,7 +24,7 @@ import numpy as np
 parser = en_core_web_lg.load()
 
 def run():
-    for size in ['s']:
+    for size in ['xl']:
         X_preprocessed = torch.load("data/bert_preprocessed/X_{}.pt".format(size)) # load BERT pre-processed data from disk
         all_graphs, gcn_offsets, cls_tokens = convert_preprocessed_rows_to_graph(X_preprocessed)
 
@@ -42,11 +42,20 @@ def convert_preprocessed_rows_to_graph(rows):
     all_graphs = []
     gcn_offsets = []
     cls_tokens = []
-    for row in rows:
-        graph, gcn_offset, cls_token = convert_preprocessed_row_to_graph(row)
+    for row_idx, row in enumerate(rows):
+        processed_output = convert_preprocessed_row_to_graph(row)
+
+        if processed_output is None:
+            continue
+
+        graph, gcn_offset, cls_token = processed_output
         all_graphs.append(graph)
         gcn_offsets.append(gcn_offset)
         cls_tokens.append(cls_token)
+
+        if row_idx % 100 == 99:
+            print("Finished row {} out of {}".format(row_idx+1, len(rows)))
+
     return all_graphs, gcn_offsets, cls_tokens
 
 def convert_preprocessed_row_to_graph(row):
@@ -65,6 +74,16 @@ def convert_preprocessed_row_to_graph(row):
     offset_words = []
 
     spacy_tokens = []
+
+    trial_offsets = []
+    for token in doc:
+        if not is_target(token, options, parsed_options):
+            continue
+
+        trial_offsets.append(token.i)
+
+    if len(trial_offsets) < 3:
+        return None
 
     for token in doc:
 
