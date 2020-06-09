@@ -18,12 +18,12 @@ import os
 from models.MainModel import GPRModel
 from utils import GPRDataset, collate
 
-size = 'xs'
+size = 's'
 cls_tokens = torch.load('data/X_train_cls_tokens_{}.bin'.format(size))
 gcn_offsets = torch.load("data/X_train_gcn_offsets_{}.bin".format(size))
 all_graphs, _ = load_graphs("data/X_train_graphs_{}.bin".format(size))
 
-y_data = torch.load('data/y_{}.pt'.format(size))
+y_data = torch.load('data/y_train_{}.bin'.format(size))
 
 use_cuda = torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")
