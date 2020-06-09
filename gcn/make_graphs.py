@@ -42,10 +42,13 @@ def convert_preprocessed_rows_to_graph(rows):
     all_graphs = []
     gcn_offsets = []
     cls_tokens = []
+    broken_examples = 0
+
     for row_idx, row in enumerate(rows):
         processed_output = convert_preprocessed_row_to_graph(row)
 
         if processed_output is None:
+            broken_examples += 1
             continue
 
         graph, gcn_offset, cls_token = processed_output
@@ -56,6 +59,7 @@ def convert_preprocessed_rows_to_graph(rows):
         if row_idx % 100 == 99:
             print("Finished row {} out of {}".format(row_idx+1, len(rows)))
 
+    print("Number of broken examples:", broken_examples)
     return all_graphs, gcn_offsets, cls_tokens
 
 def convert_preprocessed_row_to_graph(row):
