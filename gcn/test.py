@@ -38,47 +38,68 @@ def get_pred(output1, output2):
 
 def run():
 
-	# Get input data
-	cls_tokens = torch.load('data/X_train_cls_tokens_{}.bin'.format("dev"))
-	gcn_offsets = torch.load("data/X_train_gcn_offsets_{}.bin".format("dev"))
-	all_graphs, _ = load_graphs("data/X_train_graphs_{}.bin".format("dev"))
+    labeled_data_size = "s" # 'dev' for validation, 'xs',...,'xl' for training
 
-	# Get labels
-	y_data = torch.load('data/y_dev.pt')
-	test_dataset = GPRDataset(all_graphs, gcn_offsets, cls_tokens, y_data)
+    # Get input data
+    cls_tokens = torch.load('data/X_train_cls_tokens_{}.bin'.format(labeled_data_size))
+    gcn_offsets = torch.load("data/X_train_gcn_offsets_{}.bin".format(labeled_data_size))
+    all_graphs, _ = load_graphs("data/X_train_graphs_{}.bin".format(labeled_data_size))
 
-	y_pred = []
-	for trainsize in ['xs', 's', 'm', 'l', 'xl']: #, 's', 'm', 'l', 'xl']:
-		pred = []
-		model = torch.load('saved_models/gcn_model_{}.pt'.format(trainsize), map_location=device)
-		model.eval()
+    # Get labels
+    y_data = torch.load('data/y_train_{}.bin'.format(labeled_data_size))
+    test_dataset = GPRDataset(all_graphs, gcn_offsets, cls_tokens, y_data)
 
-		test_dataloader = DataLoader(
-			test_dataset,
-			collate_fn = collate,
-			batch_size = 2,
-			shuffle=False,
-		)
+    y_pred = []
+    for trainsize in ['s']: #, 's', 'm', 'l', 'xl']:
+        pred = []
+        model = torch.load('saved_models/gcn_model_{}.pt'.format(trainsize), map_location=device)
+        model.eval()
 
-		with torch.no_grad():
-			for i, data in enumerate(test_dataloader, 0):
-				graphs, gcn_offsets, cls_tokens, labels = data
-				graphs, gcn_offsets, cls_tokens, labels = graphs.to(device), gcn_offsets.to(device), cls_tokens.to(device), labels.to(device)
+        test_dataloader = DataLoader(
+        test_dataset,
+        collate_fn = collate,
+        batch_size = 2,
+        shuffle=False,
+        )
 
-				outputs = model(graphs, gcn_offsets, cls_tokens)
+        num_right_answers = 0
+        num_wrong_answers = 0
 
-				# TODO: Do dataloader and collate to pass inputs into the model
-				out1 = outputs[0].cpu()
-				out2 = outputs[1].cpu()
-				pred.append(get_pred(out1, out2))
+        with torch.no_grad():
+            for i, data in enumerate(test_dataloader, 0):
+                graphs, gcn_offsets, cls_tokens, labels = data
+                graphs, gcn_offsets, cls_tokens, labels = graphs.to(device), gcn_offsets.to(device), cls_tokens.to(device), labels.to(device)
 
-		y_pred.append(pred)
+                outputs = model(graphs, gcn_offsets, cls_tokens)
 
-	# Transpose matrix
-	y_pred = list(map(list, zip(*y_pred)))
+                # TODO: Do dataloader and collate to pass inputs into the model
+                out1 = outputs[0].cpu()
+                out2 = outputs[1].cpu()
 
-	with open("test_results.txt", "w") as f:
-		for row in y_pred:
-			f.write(",".join([str(n) for n in row]) + "\n")
+                lbl1 = labels[0].cpu()
+                lbl2 = labels[1].cpu()
+
+                model_prediction = get_pred(out1, out2)
+                true_prediction =  get_pred(lbl1, lbl2)
+
+                if (model_prediction == true_prediction):
+                    num_right_answers += 1
+                else:
+                    num_wrong_answers += 1
+
+
+                pred.append(model_prediction)
+
+            accuracy = num_right_answers / (num_right_answers + num_wrong_answers)
+            print("TrainSize: {}, Accuracy: {}".format(trainsize, accuracy))
+
+    y_pred.append(pred)
+
+    # Transpose matrix
+    y_pred = list(map(list, zip(*y_pred)))
+
+    with open("test_results.txt", "w") as f:
+        for row in y_pred:
+            f.write(",".join([str(n) for n in row]) + "\n")
 
 run()
