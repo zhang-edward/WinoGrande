@@ -173,10 +173,10 @@ def is_target(dp_token, options, parsed_options, debug=False):
     if (dp_token.lemma_.lower() == parsed_options[1][0].lemma_.lower()):
         return True
 
-    if ((token.pos_ == "PROPN" or token.pos_ == "NOUN") and token.text[-1] == 's'):
-        if (token.text[:-1].lower() == parsed_options[0][0].lemma_.lower()):
+    if ((dp_token.pos_ == "PROPN" or dp_token.pos_ == "NOUN") and dp_token.text[-1] == 's'):
+        if (dp_token.text[:-1].lower() == parsed_options[0][0].lemma_.lower()):
             return True
-        if (token.text[:-1].lower() == parsed_options[1][0].lemma_.lower()):
+        if (dp_token.text[:-1].lower() == parsed_options[1][0].lemma_.lower()):
             return True
 
     return False
