@@ -25,7 +25,7 @@ def main(args):
     # training_split = ['XS', 'S', 'M', 'L', 'XL']
     # training_sizes = [160, 640, 2558, 10234, 40398]
     training_split = ['XS', 'S', 'M', 'L', 'XL']
-    training_sizes = [160, 640, 2558, 10234, 40398]
+    training_sizes = [160, 638, 2551, 10223, 40356]
     x = [math.log2(t) for t in training_sizes]
     x_diff = max(x)-min(x)
 
