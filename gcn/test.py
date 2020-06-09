@@ -39,16 +39,16 @@ def get_pred(output1, output2):
 def run():
 
 	# Get input data
-	cls_tokens = torch.load('data/X_train_cls_tokens_{}.bin'.format("xs"))
-	gcn_offsets = torch.load("data/X_train_gcn_offsets_{}.bin".format("xs"))
-	all_graphs, _ = load_graphs("data/X_train_graphs_{}.bin".format("xs"))
+	cls_tokens = torch.load('data/X_train_cls_tokens_{}.bin'.format("dev"))
+	gcn_offsets = torch.load("data/X_train_gcn_offsets_{}.bin".format("dev"))
+	all_graphs, _ = load_graphs("data/X_train_graphs_{}.bin".format("dev"))
 
 	# Get labels
-	y_data = torch.load('data/y_xs.pt')
+	y_data = torch.load('data/y_dev.pt')
 	test_dataset = GPRDataset(all_graphs, gcn_offsets, cls_tokens, y_data)
 
 	y_pred = []
-	for trainsize in ['xs']: #, 's', 'm', 'l', 'xl']:
+	for trainsize in ['xs', 's', 'm', 'l', 'xl']: #, 's', 'm', 'l', 'xl']:
 		pred = []
 		model = torch.load('saved_models/gcn_model_{}.pt'.format(trainsize), map_location=device)
 		model.eval()

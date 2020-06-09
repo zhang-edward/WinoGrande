@@ -7,3 +7,8 @@ __pycache__/
 /pretrain/*.txt
 /pretrain/*.csv
 /pretrain/*.pt
+*.bin
+*.pt
+metrics.json
+test_results.txt
+

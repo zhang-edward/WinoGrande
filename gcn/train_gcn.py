@@ -18,7 +18,7 @@ import os
 from models.MainModel import GPRModel
 from utils import GPRDataset, collate
 
-size = 's'
+size = 'xl'
 cls_tokens = torch.load('data/X_train_cls_tokens_{}.bin'.format(size))
 gcn_offsets = torch.load("data/X_train_gcn_offsets_{}.bin".format(size))
 all_graphs, _ = load_graphs("data/X_train_graphs_{}.bin".format(size))
@@ -34,7 +34,7 @@ train_dataset = GPRDataset(all_graphs, gcn_offsets, cls_tokens, y_data)
 train_dataloader = DataLoader(
    train_dataset,
    collate_fn = collate,
-   batch_size = 64,
+   batch_size = 256,
    shuffle=True,
 )
 
@@ -55,6 +55,7 @@ for epoch in range(100):  # loop over the dataset multiple times
             for i, data in enumerate(train_dataloader, 0):
                 graphs, gcn_offsets, cls_tokens, labels = data
                 graphs, gcn_offsets, cls_tokens = graphs.to(device), gcn_offsets.to(device), cls_tokens.to(device)
+                labels = labels.to(device)
                 # inputs, labels = inputs.to(device), labels.to(device)
 
                 optimizer.zero_grad()
@@ -67,7 +68,7 @@ for epoch in range(100):  # loop over the dataset multiple times
 
                 running_loss += loss.item()
 
-                print_every = 4
+                print_every = 5
                 if i % print_every == print_every-1:    # print every 5 mini-batches
                     print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss/print_every))
                     running_loss = 0.0
