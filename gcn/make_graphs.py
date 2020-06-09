@@ -34,7 +34,7 @@ def run():
 
         print("Skipped indices:", len(skip_indices))
 
-        for y_idx, y in y_data:
+        for y_idx, y in enumerate(y_data):
             if y_idx in skip_indices:
                 continue
             y_outputs.append(y)
