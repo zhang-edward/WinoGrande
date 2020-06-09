@@ -24,17 +24,30 @@ import numpy as np
 parser = en_core_web_lg.load()
 
 def run():
-    for size in ['xl']:
+    for size in ['s']:
         X_preprocessed = torch.load("data/bert_preprocessed/X_{}.pt".format(size)) # load BERT pre-processed data from disk
-        all_graphs, gcn_offsets, cls_tokens = convert_preprocessed_rows_to_graph(X_preprocessed)
+        y_data = torch.load("data/bert_preprocessed/y_{}.pt".format(size))
+
+        y_outputs = []
+
+        all_graphs, gcn_offsets, cls_tokens, skip_indices = convert_preprocessed_rows_to_graph(X_preprocessed)
+
+        print("Skipped indices:", len(skip_indices))
+
+        for y_idx, y in y_data:
+            if y_idx in skip_indices:
+                continue
+            y_outputs.append(y)
 
         cls_tokens = torch.stack(cls_tokens)
+        y_outputs  = torch.stack(y_outputs)
         gcn_offsets = torch.tensor(gcn_offsets)
 
         # https://docs.dgl.ai/en/0.4.x/generated/dgl.data.utils.load_graphs.html
         save_graphs("data/X_train_graphs_{}.bin".format(size), all_graphs)
         torch.save(cls_tokens, "data/X_train_cls_tokens_{}.bin".format(size))
         torch.save(gcn_offsets, "data/X_train_gcn_offsets_{}.bin".format(size))
+        torch.save(y_outputs, "data/y_train_{}.bin".format(size))
 
 ### HELPER FUNCTIONS ####
 
@@ -42,12 +55,14 @@ def convert_preprocessed_rows_to_graph(rows):
     all_graphs = []
     gcn_offsets = []
     cls_tokens = []
+    skip_indices = []
     broken_examples = 0
 
     for row_idx, row in enumerate(rows):
         processed_output = convert_preprocessed_row_to_graph(row)
 
         if processed_output is None:
+            skip_indices.append(row_idx)
             broken_examples += 1
             continue
 
@@ -60,7 +75,7 @@ def convert_preprocessed_rows_to_graph(rows):
             print("Finished row {} out of {}".format(row_idx+1, len(rows)))
 
     print("Number of broken examples:", broken_examples)
-    return all_graphs, gcn_offsets, cls_tokens
+    return all_graphs, gcn_offsets, cls_tokens, skip_indices
 
 def convert_preprocessed_row_to_graph(row):
     sentence = row['sentence']
