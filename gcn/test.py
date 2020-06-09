@@ -63,13 +63,13 @@ def run():
 		with torch.no_grad():
 			for i, data in enumerate(test_dataloader, 0):
 				graphs, gcn_offsets, cls_tokens, labels = data
-				graphs, gcn_offsets, cls_tokens = graphs.to(device), gcn_offsets.to(device), cls_tokens.to(device)
+				graphs, gcn_offsets, cls_tokens, labels = graphs.to(device), gcn_offsets.to(device), cls_tokens.to(device), labels.to(device)
 
 				outputs = model(graphs, gcn_offsets, cls_tokens)
 
 				# TODO: Do dataloader and collate to pass inputs into the model
-				out1 = outputs[0]
-				out2 = outputs[1]
+				out1 = outputs[0].cpu()
+				out2 = outputs[1].cpu()
 				pred.append(get_pred(out1, out2))
 
 		y_pred.append(pred)
