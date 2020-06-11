@@ -44,6 +44,14 @@ train_dataloader = DataLoader(
    shuffle=True,
 )
 
+dev_dataset = GPRDataset(dev_all_graphs, dev_gcn_offsets, dev_cls_tokens, dev_y_data)
+dev_dataloader = DataLoader(
+   dev_dataset,
+   collate_fn = collate,
+   batch_size = 256,
+   shuffle=False,
+)
+
 model = GPRModel()
 model.to(device)
 criterion = nn.BCEWithLogitsLoss()
@@ -99,10 +107,12 @@ for epoch in range(total_epoch):  # loop over the dataset multiple times
                 running_loss = 0.0
 
         with torch.no_grad():
-            model = model.cpu()
-            v_outputs = model(dev_all_graphs, dev_gcn_offsets, dev_cls_tokens)
-            v_loss = criterion(v_outputs, dev_y_data)
-            print("validation loss: {}".format(v_loss))
+            for i, data in enumerate(train_dataloader, 0):
+                graphs, gcn_offsets, cls_tokens, labels = data
+                graphs, gcn_offsets, cls_tokens, labels = graphs.to(device), gcn_offsets.to(device), cls_tokens.to(device), labels.to(device)
+                outputs = model(graphs, gcn_offsets, cls_tokens)
+                loss = criterion(outputs, labels)
+                print("validation loss: {}".format(loss))
 
 
     torch.save(model, save_model_name)
