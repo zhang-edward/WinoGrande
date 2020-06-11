@@ -44,18 +44,36 @@ criterion = nn.BCEWithLogitsLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=5e-3, weight_decay=1e-5)
 # optimizer = optim.SGD(model.parameters(), lr=1e-5, momentum=0.9)
 
-reg_lambda = 0.035
+lr_value = 0.0001
+total_epoch = 100
+def adjust_learning_rate(optimizers, epoch):
+    # warm up
+    if epoch < 10:
+        lr_tmp = 0.00001
+    else:
+        lr_tmp = lr_value * pow((1 - 1.0 * epoch / 100), 0.9)
+    
+    if epoch > 36:
+        lr_tmp =  0.000015 * pow((1 - 1.0 * epoch / 100), 0.9)
+    
+    for optimizer in optimizers:
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = lr_tmp
+
+    return lr_tmp
 
 save_model_name = "saved_models/gcn_model_{}.pt".format(size)
 
-for epoch in range(100):  # loop over the dataset multiple times
+for epoch in range(total_epoch):  # loop over the dataset multiple times
 
         running_loss = 0.0
         with autograd.detect_anomaly():
             for i, data in enumerate(train_dataloader, 0):
+                # learning rate scheduler
+                lr = adjust_learning_rate([optimizer],epoch)
+
                 graphs, gcn_offsets, cls_tokens, labels = data
-                graphs, gcn_offsets, cls_tokens = graphs.to(device), gcn_offsets.to(device), cls_tokens.to(device)
-                labels = labels.to(device)
+                graphs, gcn_offsets, cls_tokens, labels = graphs.to(device), gcn_offsets.to(device), cls_tokens.to(device), labels.to(device)
                 # inputs, labels = inputs.to(device), labels.to(device)
 
                 optimizer.zero_grad()
