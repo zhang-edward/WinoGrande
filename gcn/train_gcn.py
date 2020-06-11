@@ -18,7 +18,7 @@ import os
 from models.MainModel import GPRModel
 from utils import GPRDataset, collate
 
-size = 'xl'
+size = 's'
 cls_tokens = torch.load('data/X_train_cls_tokens_{}.bin'.format(size))
 gcn_offsets = torch.load("data/X_train_gcn_offsets_{}.bin".format(size))
 all_graphs, _ = load_graphs("data/X_train_graphs_{}.bin".format(size))
@@ -58,17 +58,17 @@ criterion = nn.BCEWithLogitsLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=5e-3, weight_decay=1e-5)
 # optimizer = optim.SGD(model.parameters(), lr=1e-5, momentum=0.9)
 
-lr_value = 0.01
+lr_value = 0.001
 total_epoch = 100
 def adjust_learning_rate(optimizers, epoch):
     # warm up
     if epoch < 10:
-        lr_tmp = 0.001
+        lr_tmp = 0.0001
     else:
         lr_tmp = lr_value * pow((1 - 1.0 * epoch / 100), 0.9)
 
     if epoch > 36:
-        lr_tmp =  0.0015 * pow((1 - 1.0 * epoch / 100), 0.9)
+        lr_tmp =  0.00015 * pow((1 - 1.0 * epoch / 100), 0.9)
 
     for optimizer in optimizers:
         for param_group in optimizer.param_groups:
@@ -85,7 +85,7 @@ for epoch in range(total_epoch):  # loop over the dataset multiple times
         model.to(device)
         for i, data in enumerate(train_dataloader, 0):
             # learning rate scheduler
-            adjust_learning_rate([optimizer], epoch)
+            # adjust_learning_rate([optimizer], epoch)
 
             graphs, gcn_offsets, cls_tokens, labels = data
             graphs, gcn_offsets, cls_tokens, labels = graphs.to(device), gcn_offsets.to(device), cls_tokens.to(device), labels.to(device)
@@ -107,12 +107,15 @@ for epoch in range(total_epoch):  # loop over the dataset multiple times
                 running_loss = 0.0
 
         with torch.no_grad():
+            running_val_loss = 0
+            n_batches = 0
             for i, data in enumerate(train_dataloader, 0):
                 graphs, gcn_offsets, cls_tokens, labels = data
                 graphs, gcn_offsets, cls_tokens, labels = graphs.to(device), gcn_offsets.to(device), cls_tokens.to(device), labels.to(device)
                 outputs = model(graphs, gcn_offsets, cls_tokens)
-                loss = criterion(outputs, labels)
-                print("validation loss: {}".format(loss))
-
+                running_val_loss += criterion(outputs, labels)
+                n_batches += 1
+                
+            print("validation loss: {}".format(running_val_loss/n_batches))
 
     torch.save(model, save_model_name)
