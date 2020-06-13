@@ -24,9 +24,11 @@ import numpy as np
 parser = en_core_web_lg.load()
 
 def run():
-    for size in ['s']:
+    for size in ['xl']:
+        print("Loading data...")
         X_preprocessed = torch.load("data/bert_preprocessed/X_{}.pt".format(size)) # load BERT pre-processed data from disk
         y_data = torch.load("data/bert_preprocessed/y_{}.pt".format(size))
+        print("Done loading.\n")
 
         y_outputs = []
 
@@ -44,10 +46,10 @@ def run():
         gcn_offsets = torch.tensor(gcn_offsets)
 
         # https://docs.dgl.ai/en/0.4.x/generated/dgl.data.utils.load_graphs.html
-        save_graphs("data/X_train_graphs_{}.bin".format(size), all_graphs)
-        torch.save(cls_tokens, "data/X_train_cls_tokens_{}.bin".format(size))
-        torch.save(gcn_offsets, "data/X_train_gcn_offsets_{}.bin".format(size))
-        torch.save(y_outputs, "data/y_train_{}.bin".format(size))
+        save_graphs("data/Jack_X_train_graphs_{}.bin".format(size), all_graphs)
+        torch.save(cls_tokens, "data/Jack_X_train_cls_tokens_{}.bin".format(size))
+        torch.save(gcn_offsets, "data/Jack_X_train_gcn_offsets_{}.bin".format(size))
+        torch.save(y_outputs, "data/Jack_y_train_{}.bin".format(size))
 
 ### HELPER FUNCTIONS ####
 
@@ -149,31 +151,93 @@ def convert_preprocessed_row_to_graph(row):
     G.add_nodes(num_nodes)
     G.add_edges(list(zip(*tran_edges))[0], list(zip(*tran_edges))[1])
 
+    # Transform tokens and head tokens into bert contractions
+    db_tokens = []
+    db_head_tokens = []
+    for token in doc:
+        db_tokens.append(str(token))
+        db_head_tokens.append(str(token.head))
+
+    contractions = []
+    for i in range(len(db_tokens)):
+        if db_tokens[i] == "n\'t" or db_tokens[i] == "n’t":
+            db_tokens[i] = "\'t"
+            contractions.append(db_tokens[i-1])
+            db_tokens[i-1] = db_tokens[i-1] + "n"
+
+    for i in range(len(db_head_tokens)):
+        if db_head_tokens[i] == "n\'t" or db_head_tokens[i] == "n’t":
+            db_head_tokens[i] = "\'t"
+        if db_head_tokens[i] in contractions:
+            db_head_tokens[i] = db_head_tokens[i] + "n"
+
+    idx = 0
     for token in doc:
         if not (is_target(token, options, parsed_options) or is_target(token, options, parsed_options)):
             continue
 
-        dp_token = token.text
-        embedding = bert_embedding_for_dp_token(dp_token, bert_tokens, bert_embeddings)
+        embedding = bert_embedding_for_dp_token(db_tokens[idx], bert_tokens, bert_embeddings)
+        if db_tokens[idx] == "\'t":
+            if(torch.isnan(embedding.unsqueeze(0)).any()):
+                embedding = bert_embedding_for_dp_token('t', bert_tokens, bert_embeddings)
+        elif db_tokens[idx] == "can":
+            if(torch.isnan(embedding.unsqueeze(0)).any()):
+                embedding = bert_embedding_for_dp_token('cannot', bert_tokens, bert_embeddings)
+        elif db_tokens[idx] == "not":
+            if(torch.isnan(embedding.unsqueeze(0)).any()):
+                embedding = bert_embedding_for_dp_token('cannot', bert_tokens, bert_embeddings)
+        elif db_tokens[idx] == "wo":
+            if(torch.isnan(embedding.unsqueeze(0)).any()):
+                embedding = bert_embedding_for_dp_token('wont', bert_tokens, bert_embeddings)
+        elif db_tokens[idx] == "nt":
+            if(torch.isnan(embedding.unsqueeze(0)).any()):
+                embedding = bert_embedding_for_dp_token('wont', bert_tokens, bert_embeddings)
+        
         if(torch.isnan(embedding.unsqueeze(0)).any()):
-            print("UNEXPECTED: bert_embedding_for_dp_token returns NaN")
+            print("UNEXPECTED (A): bert_embedding_for_dp_token returns NaN - ", db_tokens[idx])
             # print(embedding.unsqueeze(0))
             # print(token.i, token.text, sentence, bert_tokens)
             # print(spacy_tokens)
+            print(sentence)
+            print(spacy_tokens)
+            print(bert_tokens)
+            print(bert_embeddings)
+            print('\n')
             G.nodes[ nodes[token.i] ].data['h'] = torch.randn(1024).unsqueeze(0)
         else:
             G.nodes[ nodes[token.i] ].data['h'] = embedding.unsqueeze(0)
 
-        head_dp_token = token.head.text
-        embedding = bert_embedding_for_dp_token(head_dp_token, bert_tokens, bert_embeddings)
+        embedding = bert_embedding_for_dp_token(db_head_tokens[idx], bert_tokens, bert_embeddings)
+        if db_head_tokens[idx] == "\'t":
+            if(torch.isnan(embedding.unsqueeze(0)).any()):
+                embedding = bert_embedding_for_dp_token('t', bert_tokens, bert_embeddings)
+        elif db_head_tokens[idx] == "can":
+            if(torch.isnan(embedding.unsqueeze(0)).any()):
+                embedding = bert_embedding_for_dp_token('cannot', bert_tokens, bert_embeddings)
+        elif db_head_tokens[idx] == "not":
+            if(torch.isnan(embedding.unsqueeze(0)).any()):
+                embedding = bert_embedding_for_dp_token('cannot', bert_tokens, bert_embeddings)
+        elif db_head_tokens[idx] == "wo":
+            if(torch.isnan(embedding.unsqueeze(0)).any()):
+                embedding = bert_embedding_for_dp_token('wont', bert_tokens, bert_embeddings)
+        elif db_head_tokens[idx] == "nt":
+            if(torch.isnan(embedding.unsqueeze(0)).any()):
+                embedding = bert_embedding_for_dp_token('wont', bert_tokens, bert_embeddings)
+
         if(torch.isnan(embedding.unsqueeze(0)).any()):
-            print("UNEXPECTED: bert_embedding_for_dp_token returns NaN")
+            print("UNEXPECTED (B): bert_embedding_for_dp_token returns NaN - ", db_head_tokens[idx])
             # print(embedding.unsqueeze(0))
             # print(token.i, token.head.i, token.head.text, sentence, bert_tokens)
             # print(spacy_tokens)
+            print(sentence)
+            print(spacy_tokens)
+            print(bert_tokens)
+            print('\n')
             G.nodes[ nodes[token.head.i] ].data['h'] = torch.randn(1024).unsqueeze(0)
         else:
             G.nodes[ nodes[token.head.i] ].data['h'] = embedding.unsqueeze(0)
+        
+        idx += 1
 
     edge_norm = []
     for e1, e2 in tran_edges:
@@ -230,7 +294,7 @@ def bert_embedding_for_dp_token(token, bert_tokens, bert_embeddings, debug=False
         for i, bert_token in enumerate(bert_tokens):
             if debug:
                 print("HA:", bert_token, token)
-            if bert_token in temp:
+            if bert_token in temp and temp.index(bert_token) == 0:
                 temp = temp[len(bert_token):]
                 if not seq:
                     start = i
@@ -238,10 +302,15 @@ def bert_embedding_for_dp_token(token, bert_tokens, bert_embeddings, debug=False
             else:
                 temp = token
                 seq = False
+                if bert_token in temp and temp.index(bert_token) == 0:
+                    temp = temp[len(bert_token):]
+                    if not seq:
+                        start = i
+                        seq = True
             if len(temp) == 0:
                 end = i + 1
                 break
-
+        
         if (debug):
             print(start, end)
 
